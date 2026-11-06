@@ -568,8 +568,8 @@
       try { player.volume = 0.92; } catch(_){}
       player.play().then(function(){
         statusEl.textContent = 'Now playing: ' + (localMode ? localLabel : (TRACKS[currentIdx] ? TRACKS[currentIdx].title : 'your track'));
-      }).catch(function(){
-        statusEl.textContent = 'Your browser muted the sound. Tap Drop the needle once more to start it.';
+      }).catch(function(err){
+        statusEl.textContent = 'DIAG ' + (err && err.name) + ' :: ' + (err && err.message);
       });
       return;
     }
