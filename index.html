@@ -377,6 +377,17 @@
     });
   }
 
+  player.addEventListener('timeupdate', function(){
+    if (!player.duration || !playing) return;
+    const t = localMode ? localLabel : (TRACKS[currentIdx] ? TRACKS[currentIdx].title : 'your track');
+    statusEl.textContent = 'Now playing: ' + t + ' \u00b7 ' + fmt(player.currentTime) + ' / ' + fmt(player.duration);
+  });
+
+  player.addEventListener('ended', function(){
+    if (!localMode) return; /* hosted tracks loop back to the top */
+    pause();
+  });
+
   function loadTrack(i, autoplay){
     const t = TRACKS[i];
     if (!t) return;
@@ -568,8 +579,8 @@
       try { player.volume = 0.92; } catch(_){}
       player.play().then(function(){
         statusEl.textContent = 'Now playing: ' + (localMode ? localLabel : (TRACKS[currentIdx] ? TRACKS[currentIdx].title : 'your track'));
-      }).catch(function(err){
-        statusEl.textContent = 'DIAG ' + (err && err.name) + ' :: ' + (err && err.message);
+      }).catch(function(){
+        statusEl.textContent = 'Tap Drop the needle once more. Some browsers need a second touch before they let sound through.';
       });
       return;
     }
