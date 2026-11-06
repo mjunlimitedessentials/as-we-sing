@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>As We Sing This Song | Lo-Fi Record Player</title>
+<meta name="description" content="As We Sing This Song, played on a lo-fi turntable. Words and music by Mona Jackson-Ham." />
+<link rel="canonical" href="https://aswesing.mjunlimitedessentialmktg.com/" />
+<style>
+  :root{
+    --ink:#0a0709;
+    --ink2:#150d14;
+    --gold:#f0b95a;
+    --gold-dim:#8a6a34;
+    --violet:#8a54e0;
+    --paper:#efe3c8;
+    --paper-ink:#2a2136;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 700px at 22% 8%, rgba(138,84,224,.22), transparent 62%),
+      radial-gradient(900px 620px at 82% 88%, rgba(240,185,90,.16), transparent 60%),
+      linear-gradient(160deg,#120b15 0%, #0a0709 55%, #0d0810 100%);
+    color:#f3e9f6;
+    font-family:"Avenir Next","Segoe UI",Helvetica,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    padding:38px 20px 54px;
+    overflow-x:hidden;
+  }
+  /* ambience layers */
+  .vignette{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.62) 100%);z-index:3}
+  .grain{position:fixed;inset:-60px;pointer-events:none;z-index:4;opacity:.16;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.55'/></svg>");
+    animation:grainShift 1.1s steps(3) infinite}
+  @keyframes grainShift{0%{transform:translate(0,0)}33%{transform:translate(-6px,4px)}66%{transform:translate(5px,-5px)}100%{transform:translate(0,0)}}
+  .dust{position:fixed;inset:0;pointer-events:none;z-index:2}
+  .mote{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(240,185,90,.55);
+    filter:blur(.6px);animation:floatUp linear infinite}
+  @keyframes floatUp{
+    0%{transform:translateY(20vh) translateX(0) scale(1);opacity:0}
+    12%{opacity:.7}
+    82%{opacity:.5}
+    100%{transform:translateY(-92vh) translateX(28px) scale(.65);opacity:0}
+  }
+
+  .stage{
+    position:relative;z-index:5;width:100%;max-width:1040px;
+    display:grid;grid-template-columns:minmax(320px,1fr) minmax(280px,.92fr);
+    gap:44px;align-items:center;
+  }
+
+  /* ---------- TURNTABLE ---------- */
+  .deck{
+    position:relative;
+    padding:26px 26px 22px;
+    border-radius:20px;
+    background:
+      linear-gradient(168deg,#3a2418 0%, #26160f 42%, #1b100b 100%);
+    box-shadow:
+      0 40px 80px -30px rgba(0,0,0,.95),
+      0 2px 0 rgba(255,220,170,.18) inset,
+      0 -18px 40px rgba(0,0,0,.6) inset;
+    border:1px solid rgba(255,205,140,.14);
+  }
+  .deck::before{
+    content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;opacity:.35;
+    background-image:repeating-linear-gradient(94deg, rgba(255,214,160,.06) 0 2px, transparent 2px 7px);
+  }
+  .brandplate{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:9.5px;letter-spacing:.34em;text-transform:uppercase;
+    color:rgba(240,185,90,.62);margin-bottom:14px;
+  }
+  .brandplate .lamp{width:7px;height:7px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 10px var(--gold);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+  .platter-area{position:relative;display:flex;justify-content:center;padding:6px 0 2px}
+
+  .platter{
+    position:relative;width:min(348px,74vw);aspect-ratio:1;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%, #191419 0 46%, #0e0b0f 47% 100%);
+    box-shadow:inset 0 0 0 6px rgba(0,0,0,.55), 0 16px 34px rgba(0,0,0,.7);
+    display:grid;place-items:center;
+  }
+  .record{
+    position:relative;width:92%;aspect-ratio:1;border-radius:50%;
+    background:
+      repeating-radial-gradient(circle at 50% 50%,
+        #121014 0 1px, #1d1a20 1px 3px, #0c0a0e 3px 5px),
+      radial-gradient(circle at 50% 50%, #17141a, #050406 78%);
+    box-shadow:0 0 0 2px rgba(255,255,255,.05), 0 10px 26px rgba(0,0,0,.7);
+    animation:spin 1.8s linear infinite;
+    animation-play-state:paused;
+  }
+  .record.playing{animation-play-state:running}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .sheen{
+    position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:conic-gradient(from 210deg,
+      rgba(255,255,255,0) 0deg, rgba(255,255,255,.10) 26deg,
+      rgba(255,255,255,0) 62deg, rgba(255,255,255,.06) 148deg,
+      rgba(255,255,255,0) 200deg, rgba(255,255,255,.09) 300deg,
+      rgba(255,255,255,0) 360deg);
+    mix-blend-mode:screen;opacity:.5;
+  }
+  .label{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:41%;aspect-ratio:1;border-radius:50%;
+    background:
+      radial-gradient(circle at 34% 30%, #f7d79a 0%, #e5ad55 34%, #a9742c 66%, #7c4f1c 100%);
+    box-shadow:inset 0 0 0 1px rgba(60,34,10,.5), 0 2px 10px rgba(0,0,0,.55);
+    display:grid;place-items:center;text-align:center;color:#3a2409;
+    padding:8%;
+  }
+  .label .ttl{font-size:clamp(8px,1.5vw,11.5px);font-weight:800;letter-spacing:.06em;line-height:1.18;text-transform:uppercase}
+  .label .sub{font-size:clamp(6px,1vw,8px);letter-spacing:.16em;margin-top:4px;opacity:.8;text-transform:uppercase}
+  .label .side{font-size:clamp(5.5px,.9vw,7px);letter-spacing:.2em;margin-top:3px;opacity:.62}
+  .spindle{
+    position:absolute;top:50%;left:50%;width:9px;height:9px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 35% 30%, #fff6e2, #b98f4a 60%, #4b3212);
+    box-shadow:0 1px 3px rgba(0,0,0,.8);
+  }
+
+  /* tone arm */
+  .arm{
+    position:absolute;top:2%;right:-2%;width:44%;height:44%;pointer-events:none;
+    transform-origin:88% 12%;
+    transform:rotate(-26deg);
+    transition:transform .9s cubic-bezier(.34,1.16,.4,1);
+  }
+  .arm.on{transform:rotate(2deg)}
+  .arm .pivot{
+    position:absolute;top:0;right:0;width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle at 36% 32%, #d8cbb8, #6c5a48 58%, #2c241c);
+    box-shadow:0 4px 12px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.16);
+  }
+  .arm .rod{
+    position:absolute;top:20px;right:26px;width:3px;height:78%;
+    background:linear-gradient(180deg,#e6dccb,#9d8f7c 55%,#5c5044);
+    border-radius:2px;transform-origin:top center;transform:rotate(19deg);
+    box-shadow:1px 0 2px rgba(0,0,0,.5);
+  }
+  .arm .head{
+    position:absolute;bottom:2%;right:calc(26px + 19% );width:26px;height:15px;border-radius:3px;
+    background:linear-gradient(150deg,#cfc2ad,#5d5142);transform:rotate(19deg);
+    box-shadow:0 3px 7px rgba(0,0,0,.6);
+  }
+
+  .controls{display:flex;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}
+  .play{
+    display:inline-flex;align-items:center;gap:11px;
+    border:1px solid rgba(240,185,90,.5);
+    background:linear-gradient(160deg, rgba(240,185,90,.16), rgba(138,84,224,.14));
+    color:#ffe9c4;font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+    padding:12px 20px;border-radius:999px;cursor:pointer;
+    font-family:inherit;font-weight:700;transition:.22s ease;
+  }
+  .play:hover{background:linear-gradient(160deg, rgba(240,185,90,.3), rgba(138,84,224,.24));
+    box-shadow:0 0 22px rgba(240,185,90,.22);transform:translateY(-1px)}
+  .play:active{transform:translateY(0)}
+  .play .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+  .play.is-playing .dot{background:var(--violet);box-shadow:0 0 10px var(--violet)}
+  .load{
+    border:none;background:none;color:rgba(243,233,246,.55);cursor:pointer;
+    font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    border-bottom:1px dotted rgba(243,233,246,.3);padding:0 0 3px;
+  }
+  .load:hover{color:var(--gold)}
+  .meter{display:flex;gap:3px;align-items:flex-end;height:22px;margin-left:auto}
+  .meter i{display:block;width:3px;background:linear-gradient(180deg,var(--gold),var(--violet));
+    border-radius:2px;height:5px;opacity:.5;transition:height .12s ease,opacity .2s}
+  .meter.live i{opacity:.9}
+
+  /* ---------- WORDS ---------- */
+  .words{
+    position:relative;background:linear-gradient(175deg,#f3e8d0,#e3d3b2);
+    color:var(--paper-ink);border-radius:6px;padding:30px 28px 24px;
+    box-shadow:0 26px 60px -26px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.4);
+    transform:rotate(-.7deg);
+  }
+  .words::after{
+    content:"";position:absolute;inset:0;border-radius:6px;pointer-events:none;
+    background:radial-gradient(circle at 12% 8%, rgba(120,80,30,.10), transparent 42%),
+               radial-gradient(circle at 90% 92%, rgba(120,80,30,.12), transparent 46%);
+  }
+  .eyebrow{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:#8a6a34;margin-bottom:12px}
+  .songtitle{font-size:clamp(21px,3.4vw,30px);line-height:1.1;margin:0 0 4px;letter-spacing:-.01em;
+    font-family:Georgia,"Times New Roman",serif}
+  .byline{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#6b5a43;margin:0 0 22px}
+  .verse{border-left:2px solid rgba(138,106,52,.45);padding-left:16px;margin-bottom:22px}
+  .verse p{margin:0 0 9px;font-size:15.5px;line-height:1.62;font-family:Georgia,serif}
+  .verse p:last-child{margin-bottom:0}
+  .mark{background:linear-gradient(180deg,transparent 62%, rgba(240,185,90,.42) 62%);}
+  .copyright{font-size:9.5px;letter-spacing:.05em;color:#7a6a52;border-top:1px solid rgba(138,106,52,.3);padding-top:12px;margin:0}
+  .note{font-size:11px;line-height:1.55;color:rgba(243,233,246,.5);margin:14px 0 0;max-width:360px}
+
+  @media (max-width:860px){
+    .stage{grid-template-columns:1fr;gap:34px}
+    .words{transform:rotate(0)}
+    .note{margin-left:auto;margin-right:auto;text-align:center}
+    body{padding:26px 14px 40px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .grain,.mote{animation:none}
+    .record{animation-duration:9s}
+  }
+</style>
+</head>
+<body>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="dust" id="dust" aria-hidden="true"></div>
+
+<main class="stage">
+  <section class="deck" aria-label="Lo-fi record player">
+    <div class="brandplate">
+      <span>ThinkBox&nbsp;AI&nbsp;Studios</span>
+      <span class="lamp" aria-hidden="true"></span>
+      <span>33&#8531; RPM &middot; Lo-Fi Cut</span>
+    </div>
+
+    <div class="platter-area">
+      <div class="platter">
+        <div class="record" id="record">
+          <div class="sheen" aria-hidden="true"></div>
+          <div class="label">
+            <div>
+              <div class="ttl">As We<br>Sing This Song</div>
+              <div class="sub">M. Jackson-Ham</div>
+              <div class="side">A&nbsp;Side &middot; 2026</div>
+            </div>
+          </div>
+          <div class="spindle" aria-hidden="true"></div>
+        </div>
+        <div class="arm" id="arm" aria-hidden="true">
+          <div class="pivot"></div>
+          <div class="rod"></div>
+          <div class="head"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="play" id="play" aria-live="polite"><span class="dot"></span><span id="playLabel">Drop the needle</span></button>
+      <button class="load" id="load">Load my track</button>
+      <input type="file" id="file" accept="audio/*" hidden />
+      <div class="meter" id="meter" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section>
+    <article class="words">
+      <div class="eyebrow">Words &amp; Music</div>
+      <h1 class="songtitle">As We Sing This Song</h1>
+      <p class="byline">Mona Jackson-Ham &middot; MJUnlimited</p>
+      <div class="verse">
+        <p>As we sing this song, we will sing along.</p>
+        <p>As the people sing, we will sing their song.</p>
+        <p>As we worship Him, we will call His name.</p>
+        <p>As we sing this song, <span class="mark">we will sing along.</span></p>
+      </div>
+      <p class="copyright">&copy; 2026 Mona Jackson-Ham &middot; MJUnlimited Essential Marketing. All rights reserved. Written and owned by the author. No reproduction, sampling, or distribution without written permission.</p>
+    </article>
+    <p class="note" id="status">Spinning a warm lo-fi bed so the record has a voice. Load your own track and it takes over the platter.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* dust motes */
+  const dust = document.getElementById('dust');
+  for (let i = 0; i < 26; i++){
+    const m = document.createElement('span');
+    m.className = 'mote';
+    m.style.left = (Math.random() * 100) + 'vw';
+    m.style.animationDuration = (16 + Math.random() * 22) + 's';
+    m.style.animationDelay = (-Math.random() * 30) + 's';
+    m.style.opacity = 0.25 + Math.random() * 0.5;
+    const s = 2 + Math.random() * 3;
+    m.style.width = s + 'px'; m.style.height = s + 'px';
+    dust.appendChild(m);
+  }
+
+  /* meter bars */
+  const meter = document.getElementById('meter');
+  const bars = [];
+  for (let i = 0; i < 11; i++){
+    const b = document.createElement('i');
+    meter.appendChild(b); bars.push(b);
+  }
+
+  const record   = document.getElementById('record');
+  const arm      = document.getElementById('arm');
+  const playBtn  = document.getElementById('play');
+  const playLbl  = document.getElementById('playLabel');
+  const fileIn   = document.getElementById('file');
+  const loadBtn  = document.getElementById('load');
+  const statusEl = document.getElementById('status');
+
+  let ctx = null, master = null, crackleGain = null;
+  let playing = false;
+  let schedTimer = null, nextTime = 0, bar = 0;
+  let userTrack = null, userNode = null, userSourceEl = null;
+  let visualTimer = null;
+
+  const BPM = 72;
+  const BEAT = 60 / BPM;
+  const BAR  = BEAT * 4;
+
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  /* Dmaj9, Bm9, Gmaj9, A7sus */
+  const CHORDS = [
+    [50, 57, 61, 64, 66],
+    [47, 54, 57, 62, 64],
+    [43, 50, 54, 59, 62],
+    [45, 52, 57, 62, 67]
+  ];
+
+  function initAudio(){
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.value = 0.0;
+    const warm = ctx.createBiquadFilter();
+    warm.type = 'lowpass';
+    warm.frequency.value = 3200;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -20; comp.ratio.value = 3;
+    master.connect(warm); warm.connect(comp); comp.connect(ctx.destination);
+
+    /* vinyl crackle */
+    const dur = 4, sr = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, sr * dur, sr);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++){
+      const pop = Math.random() < 0.00055 ? (Math.random() * 2 - 1) * 0.9 : 0;
+      d[i] = (Math.random() * 2 - 1) * 0.035 + pop;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.7;
+    crackleGain = ctx.createGain();
+    crackleGain.gain.value = 0.5;
+    src.connect(bp); bp.connect(crackleGain); crackleGain.connect(master);
+    src.start();
+  }
+
+  function pad(freqs, t, dur){
+    const g = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 1150; lp.Q.value = 0.6;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.10, t + 0.55);
+    g.gain.linearRampToValueAtTime(0.075, t + dur * 0.7);
+    g.gain.linearRampToValueAtTime(0, t + dur + 0.35);
+    lp.connect(g); g.connect(master);
+    freqs.forEach((m, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === 0 ? 'triangle' : 'sine';
+      o.frequency.value = mtof(m);
+      /* gentle wow and flutter */
+      const lfo = ctx.createOscillator();
+      const lg = ctx.createGain();
+      lfo.frequency.value = 0.18 + i * 0.05;
+      lg.gain.value = 3.4;
+      lfo.connect(lg); lg.connect(o.detune);
+      o.connect(lp);
+      o.start(t); lfo.start(t);
+      o.stop(t + dur + 0.5); lfo.stop(t + dur + 0.5);
+    });
+  }
+
+  function bass(m, t, dur){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = mtof(m);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.16, t + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.95);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur);
+  }
+
+  function hat(t, gain){
+    const len = Math.floor(ctx.sampleRate * 0.09);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+    const s = ctx.createBufferSource(); s.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6200;
+    const g = ctx.createGain(); g.gain.value = gain;
+    s.connect(hp); hp.connect(g); g.connect(master);
+    s.start(t);
+  }
+
+  function kick(t){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(96, t);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    g.gain.setValueAtTime(0.28, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.26);
+  }
+
+  function scheduleBar(startTime){
+    const ch = CHORDS[bar % CHORDS.length];
+    pad(ch.slice(1), startTime, BAR);
+    bass(ch[0] - 12, startTime, BAR * 0.55);
+    bass(ch[0] - 12, startTime + BEAT * 2, BAR * 0.42);
+    kick(startTime);
+    kick(startTime + BEAT * 2.5);
+    for (let b = 0; b < 4; b++) hat(startTime + b * BEAT + BEAT / 2, b % 2 ? 0.05 : 0.085);
+    bar++;
+  }
+
+  function startScheduler(){
+    nextTime = ctx.currentTime + 0.08;
+    bar = 0;
+    const pump = () => {
+      while (nextTime < ctx.currentTime + 1.2){
+        scheduleBar(nextTime);
+        nextTime += BAR;
+      }
+    };
+    pump();
+    schedTimer = setInterval(pump, 260);
+  }
+
+  function stopScheduler(){
+    if (schedTimer) clearInterval(schedTimer);
+    schedTimer = null;
+  }
+
+  function startVisual(){
+    const t0 = performance.now();
+    visualTimer = setInterval(() => {
+      const t = (performance.now() - t0) / 1000;
+      bars.forEach((b, i) => {
+        const v = Math.sin(t * (3.4 + i * 0.55) + i) * 0.5 + 0.5;
+        const h = 4 + v * (i % 3 === 0 ? 18 : 13);
+        b.style.height = h.toFixed(1) + 'px';
+      });
+    }, 90);
+    meter.classList.add('live');
+  }
+
+  function stopVisual(){
+    if (visualTimer) clearInterval(visualTimer);
+    visualTimer = null;
+    meter.classList.remove('live');
+    bars.forEach(b => b.style.height = '5px');
+  }
+
+  async function play(){
+    initAudio();
+    if (ctx.state === 'suspended') await ctx.resume();
+
+    if (userSourceEl){
+      userSourceEl.play();
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 0.5);
+      crackleGain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.6);
+    } else {
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0.85, ctx.currentTime + 1.1);
+      startScheduler();
+    }
+
+    playing = true;
+    record.classList.add('playing');
+    arm.classList.add('on');
+    playBtn.classList.add('is-playing');
+    playLbl.textContent = 'Lift the needle';
+    startVisual();
+  }
+
+  function pause(){
+    playing = false;
+    record.classList.remove('playing');
+    arm.classList.remove('on');
+    playBtn.classList.remove('is-playing');
+    playLbl.textContent = 'Drop the needle';
+    stopVisual();
+
+    if (ctx && master){
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.28);
+      setTimeout(stopScheduler, 300);
+    }
+    if (userSourceEl) userSourceEl.pause();
+  }
+
+  playBtn.addEventListener('click', () => { playing ? pause() : play(); });
+
+  loadBtn.addEventListener('click', () => fileIn.click());
+
+  fileIn.addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    initAudio();
+    if (playing) pause();
+
+    if (userSourceEl){ userSourceEl.pause(); userSourceEl = null; }
+    userTrack = URL.createObjectURL(f);
+    userSourceEl = new Audio(userTrack);
+    userSourceEl.loop = true;
+    userSourceEl.crossOrigin = 'anonymous';
+
+    try {
+      if (userNode) { try { userNode.disconnect(); } catch(_){} }
+      userNode = ctx.createMediaElementSource(userSourceEl);
+      userNode.connect(master);
+    } catch(err){
+      /* if the element source cannot be wired, let it play directly */
+      userSourceEl.volume = 0.9;
+    }
+
+    statusEl.textContent = 'Now loaded: ' + f.name.replace(/\.[^.]+$/, '') + '. Hit Drop the needle.';
+    playLbl.textContent = 'Drop the needle';
+    playing = false;
+  });
+
+  /* keyboard */
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target === document.body){
+      e.preventDefault();
+      playing ? pause() : play();
+    }
+  });
+})();
+</script>
+</body>
+</html>
