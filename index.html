@@ -211,6 +211,17 @@
     .grain,.mote{animation:none}
     .record{animation-duration:9s}
   }
+
+  .rack{margin-top:16px;border-top:1px solid rgba(233,199,146,.16);padding-top:12px;display:grid;gap:6px}
+  .rack-track{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:10px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(233,199,146,.14);border-radius:10px;
+    padding:9px 12px;color:#e8dcc6;font-family:inherit;font-size:12.5px;letter-spacing:.03em;
+    text-align:left;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+  .rack-track:hover{background:rgba(233,199,146,.1);transform:translateY(-1px)}
+  .rack-track.active{border-color:rgba(233,182,85,.6);background:rgba(233,182,85,.13);color:#fff3d8}
+  .rack-track .num{color:#a48b62;font-size:11px}
+  .rack-track .rd{color:#a48b62;font-size:11px}
+  .rack-track.active .rd,.rack-track.active .num{color:#e9b655}
 </style>
 </head>
 <body>
@@ -232,8 +243,8 @@
           <div class="sheen" aria-hidden="true"></div>
           <div class="label">
             <div>
-              <div class="ttl">As We<br>Sing This Song</div>
-              <div class="sub">Rachel Grace Ham</div>
+              <div class="ttl" id="labelTitle">As We<br>Sing This Song</div>
+              <div class="sub" id="labelSub">Rachel Grace Ham</div>
               <div class="side">A&nbsp;Side &middot; 2026</div>
             </div>
           </div>
@@ -253,20 +264,22 @@
       <input type="file" id="file" accept="audio/*" hidden />
       <div class="meter" id="meter" aria-hidden="true"></div>
     </div>
+
+    <div class="rack" id="rack" hidden></div>
   </section>
 
   <section>
     <article class="words">
       <div class="eyebrow">Words &amp; Music</div>
-      <h1 class="songtitle">As We Sing This Song</h1>
-      <p class="byline">Written and sung by Rachel Grace Ham</p>
-      <div class="verse">
+      <h1 class="songtitle" id="cardTitle">As We Sing This Song</h1>
+      <p class="byline" id="cardByline">Written and sung by Rachel Grace Ham</p>
+      <div class="verse" id="cardVerse">
         <p>As we sing this song, we will sing along,</p>
         <p>As the people sing, we will sing His song,</p>
         <p>As we worship Him, Christ Jesus is His name,</p>
         <p>We will sing unto Him, this song of worship, <span class="mark">a song of praise.</span></p>
       </div>
-      <p class="copyright">&copy; 2026 Rachel Grace Ham. All rights reserved. Written and sung by Rachel Grace Ham. No reproduction, sampling, or distribution without written permission.</p>
+      <p class="copyright" id="cardCopy">&copy; 2026 Rachel Grace Ham. All rights reserved. Written and sung by Rachel Grace Ham. No reproduction, sampling, or distribution without written permission.</p>
     </article>
     <p class="note" id="status">Spinning a warm lo-fi bed so the record has a voice. Load your own track and it takes over the platter.</p>
   </section>
@@ -305,6 +318,83 @@
   const fileIn   = document.getElementById('file');
   const loadBtn  = document.getElementById('load');
   const statusEl = document.getElementById('status');
+  const labelTitle = document.getElementById('labelTitle');
+  const labelSub   = document.getElementById('labelSub');
+  const cardTitle  = document.getElementById('cardTitle');
+  const cardByline = document.getElementById('cardByline');
+  const cardVerse  = document.getElementById('cardVerse');
+  const cardCopy   = document.getElementById('cardCopy');
+  const rack       = document.getElementById('rack');
+
+  /* ===== hosted tracks: the record plays itself, no file picking needed ===== */
+  const player = new Audio();
+  player.preload = 'metadata';
+  let TRACKS = [], currentIdx = null, localMode = false, localLabel = '';
+
+  function fmt(s){ if(!isFinite(s)) return ''; const m = Math.floor(s/60), r = Math.round(s%60); return m + ':' + String(r).padStart(2,'0'); }
+
+  fetch('tracks.json', {cache:'no-store'})
+    .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+    .then(function(list){
+      TRACKS = Array.isArray(list) ? list : [];
+      if (!TRACKS.length) return;
+      buildRack();
+      loadTrack(0, false);
+    })
+    .catch(function(){});
+
+  function buildRack(){
+    rack.innerHTML = '';
+    TRACKS.forEach(function(t, i){
+      const b = document.createElement('button');
+      b.className = 'rack-track';
+      b.type = 'button';
+      b.dataset.idx = i;
+      b.innerHTML = '<span class="num">' + (i+1) + '</span><span class="rt"></span><span class="rd" data-dur="' + i + '">' + (t.length || '') + '</span>';
+      b.querySelector('.rt').textContent = t.title;
+      b.addEventListener('click', function(){
+        const was = playing;
+        if (playing) pause();
+        loadTrack(i, was);
+      });
+      rack.appendChild(b);
+    });
+    rack.hidden = false;
+  }
+
+  function applyTrackMeta(t){
+    if (t.title){ labelTitle.textContent = t.title; cardTitle.textContent = t.title; }
+    if (t.artist) labelSub.textContent = t.artist;
+    if (t.credit) cardByline.textContent = t.credit;
+    if (Array.isArray(t.lyrics) && t.lyrics.length){
+      cardVerse.innerHTML = t.lyrics.map(function(l, i){
+        return i === t.lyrics.length - 1 ? '<p><span class="mark">' + l + '</span></p>' : '<p>' + l + '</p>';
+      }).join('');
+    }
+    if (t.copyright) cardCopy.textContent = t.copyright;
+    document.querySelectorAll('.rack-track').forEach(function(b){
+      b.classList.toggle('active', Number(b.dataset.idx) === currentIdx);
+    });
+  }
+
+  function loadTrack(i, autoplay){
+    const t = TRACKS[i];
+    if (!t) return;
+    currentIdx = i;
+    localMode = false;
+    player.src = 'tracks/' + t.file;
+    applyTrackMeta(t);
+    statusEl.textContent = 'Loaded: ' + t.title + '. Drop the needle.';
+    player.addEventListener('loadedmetadata', function(){
+      if (isFinite(player.duration)){
+        statusEl.textContent = t.title + ' \u00b7 ' + fmt(player.duration) + ' \u00b7 ready. Drop the needle.';
+        const slot = document.querySelector('.rd[data-dur="' + i + '"]');
+        if (slot) slot.textContent = fmt(player.duration);
+      }
+    }, {once:true});
+    if (autoplay) play();
+  }
+
 
   let ctx = null, master = null, crackleGain = null;
   let playing = false;
@@ -473,6 +563,17 @@
     playLbl.textContent = 'Lift the needle';
     startVisual();
 
+    /* a hosted track or a loaded local file always wins over the lo-fi bed */
+    if (player.src){
+      try { player.volume = 0.92; } catch(_){}
+      player.play().then(function(){
+        statusEl.textContent = 'Now playing: ' + (localMode ? localLabel : (TRACKS[currentIdx] ? TRACKS[currentIdx].title : 'your track'));
+      }).catch(function(){
+        statusEl.textContent = 'Your browser muted the sound. Tap Drop the needle once more to start it.';
+      });
+      return;
+    }
+
     try {
       initAudio();
     } catch (err){
@@ -497,6 +598,7 @@
 
   function pause(){
     playing = false;
+    try { if (player.src) player.pause(); } catch(_){}
     record.classList.remove('playing');
     arm.classList.remove('on');
     playBtn.classList.remove('is-playing');
@@ -516,30 +618,15 @@
 
   loadBtn.addEventListener('click', () => fileIn.click());
 
-  fileIn.addEventListener('change', async (e) => {
+  fileIn.addEventListener('change', function(e){
     const f = e.target.files && e.target.files[0];
     if (!f) return;
-    initAudio();
     if (playing) pause();
-
-    if (userSourceEl){ userSourceEl.pause(); userSourceEl = null; }
-    userTrack = URL.createObjectURL(f);
-    userSourceEl = new Audio(userTrack);
-    userSourceEl.loop = true;
-    userSourceEl.crossOrigin = 'anonymous';
-
-    try {
-      if (userNode) { try { userNode.disconnect(); } catch(_){} }
-      userNode = ctx.createMediaElementSource(userSourceEl);
-      userNode.connect(master);
-    } catch(err){
-      /* if the element source cannot be wired, let it play directly */
-      userSourceEl.volume = 0.9;
-    }
-
-    statusEl.textContent = 'Now loaded: ' + f.name.replace(/\.[^.]+$/, '') + '. Hit Drop the needle.';
+    localMode = true;
+    localLabel = f.name.replace(/\.[^.]+$/, '');
+    player.src = URL.createObjectURL(f);
     playLbl.textContent = 'Drop the needle';
-    playing = false;
+    statusEl.textContent = 'Loaded from your device: ' + localLabel + '. Drop the needle.';
   });
 
   /* keyboard */
