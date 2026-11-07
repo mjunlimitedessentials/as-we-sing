@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>As We Sing This Song | Lo-Fi Record Player</title>
-<meta name="description" content="As We Sing This Song, played on a lo-fi turntable. Written and sung by Rachel Grace Ham." />
+<title>The Playlist | Lo-Fi Record Player</title>
+<meta name="description" content="The playlist on a lo-fi turntable: As We Sing This Song by Rachel Grace Ham and Warmer Way Tonight by Mona Jackson-Ham." />
 <link rel="canonical" href="https://aswesing.mjunlimitedessentialmktg.com/" />
 <style>
   :root{
@@ -216,6 +216,11 @@
     .record{animation-duration:9s}
   }
 
+  .rack-head{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;
+    border-top:1px solid rgba(233,199,146,.16);padding-top:12px;
+    font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:#a48b62}
+  .rack-head span:last-child{letter-spacing:.12em;color:#8d7757}
+  .rack{margin-top:8px;display:grid;gap:6px}
   .rack{margin-top:16px;border-top:1px solid rgba(233,199,146,.16);padding-top:12px;display:grid;gap:6px}
   .rack-track{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:10px;
     background:rgba(255,255,255,.03);border:1px solid rgba(233,199,146,.14);border-radius:10px;
@@ -264,11 +269,14 @@
 
     <div class="controls">
       <button class="play" id="play" aria-live="polite"><span class="dot"></span><span id="playLabel">Drop the needle</span></button>
+      <button class="load" id="prev" title="Previous song">Prev</button>
+      <button class="load" id="next" title="Next song">Next</button>
       <button class="load" id="load">Load my track</button>
       <input type="file" id="file" accept="audio/*" hidden />
       <div class="meter" id="meter" aria-hidden="true"></div>
     </div>
 
+    <div class="rack-head" id="rackHead" hidden><span>The playlist</span><span id="rackCount"></span></div>
     <div class="rack" id="rack" hidden></div>
   </section>
 
@@ -329,6 +337,10 @@
   const cardVerse  = document.getElementById('cardVerse');
   const cardCopy   = document.getElementById('cardCopy');
   const rack       = document.getElementById('rack');
+  const rackHead   = document.getElementById('rackHead');
+  const rackCount  = document.getElementById('rackCount');
+  const prevBtn    = document.getElementById('prev');
+  const nextBtn    = document.getElementById('next');
 
   /* ===== hosted tracks: the record plays itself, no file picking needed ===== */
   const player = new Audio();
@@ -347,6 +359,9 @@
     })
     .catch(function(){});
 
+  prevBtn.addEventListener('click', function(){ step(-1); });
+  nextBtn.addEventListener('click', function(){ step(1); });
+
   function buildRack(){
     rack.innerHTML = '';
     TRACKS.forEach(function(t, i){
@@ -364,6 +379,8 @@
       rack.appendChild(b);
     });
     rack.hidden = false;
+    rackHead.hidden = false;
+    rackCount.textContent = TRACKS.length + (TRACKS.length === 1 ? ' side' : ' sides');
   }
 
   function applyTrackMeta(t){
@@ -391,9 +408,18 @@
   });
 
   player.addEventListener('ended', function(){
-    if (!localMode) return; /* hosted tracks loop back to the top */
+    if (localMode){ pause(); return; }
+    if (TRACKS.length > 1){ step(1); return; }
     pause();
   });
+
+  function step(dir){
+    if (!TRACKS.length) return;
+    var i = (currentIdx === null ? 0 : currentIdx + dir);
+    if (i >= TRACKS.length) i = 0;
+    if (i < 0) i = TRACKS.length - 1;
+    loadTrack(i, true);
+  }
 
   function loadTrack(i, autoplay){
     const t = TRACKS[i];
@@ -402,7 +428,7 @@
     localMode = false;
     player.src = 'tracks/' + t.file;
     applyTrackMeta(t);
-    statusEl.textContent = 'Loaded: ' + t.title + '. Drop the needle.';
+    statusEl.textContent = 'Track ' + (i + 1) + ' of ' + TRACKS.length + ' \u00b7 ' + t.title + '. Drop the needle.';
     player.addEventListener('loadedmetadata', function(){
       if (isFinite(player.duration)){
         statusEl.textContent = t.title + ' \u00b7 ' + fmt(player.duration) + ' \u00b7 ready. Drop the needle.';
