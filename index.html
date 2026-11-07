@@ -198,6 +198,10 @@
   .verse p{margin:0 0 9px;font-size:15.5px;line-height:1.62;font-family:Georgia,serif}
   .verse p:last-child{margin-bottom:0}
   .mark{background:linear-gradient(180deg,transparent 62%, rgba(240,185,90,.42) 62%);}
+  .verse .sec{font-family:'Helvetica Neue',Arial,sans-serif;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#a08a63;margin:10px 0 2px}
+  .verse .gap{height:6px;margin:0}
+  .verse p{margin:0 0 1px}
+  .words.scrollable{max-height:none}
   .copyright{font-size:9.5px;letter-spacing:.05em;color:#7a6a52;border-top:1px solid rgba(138,106,52,.3);padding-top:12px;margin:0}
   .note{font-size:11px;line-height:1.55;color:rgba(243,233,246,.5);margin:14px 0 0;max-width:360px}
 
@@ -368,7 +372,10 @@
     if (t.credit) cardByline.textContent = t.credit;
     if (Array.isArray(t.lyrics) && t.lyrics.length){
       cardVerse.innerHTML = t.lyrics.map(function(l, i){
-        return i === t.lyrics.length - 1 ? '<p><span class="mark">' + l + '</span></p>' : '<p>' + l + '</p>';
+        var last = (i === t.lyrics.length - 1);
+        if (/^\s*\[.+\]\s*$/.test(l)) return '<p class="sec">' + l.replace(/[\[\]]/g, '') + '</p>';
+        if (!l) return '<p class="gap"></p>';
+        return last ? '<p><span class="mark">' + l + '</span></p>' : '<p>' + l + '</p>';
       }).join('');
     }
     if (t.copyright) cardCopy.textContent = t.copyright;
