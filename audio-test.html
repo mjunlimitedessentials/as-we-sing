@@ -1,9 +1,0 @@
-<!doctype html><html><head><meta charset="utf-8"><title>audio probe</title></head><body>
-<p id="out">starting</p>
-<audio id="a" src="tracks/as-we-sing-this-song.mp3" muted autoplay preload="auto"></audio>
-<script>
-var a=document.getElementById('a'), out=document.getElementById('out'), ticks=0;
-function show(){ ticks++; out.textContent='PROBE t='+a.currentTime.toFixed(2)+' dur='+(a.duration||0).toFixed(2)+' paused='+a.paused+' ticks='+ticks; }
-setInterval(show,500);
-a.addEventListener('error',function(){ out.textContent='PROBE error code='+(a.error&&a.error.code); });
-</script></body></html>
